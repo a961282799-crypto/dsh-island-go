@@ -1,0 +1,52 @@
+name: publish
+
+# 发布到 npm：用 npm 的 Trusted Publisher（OIDC），CI 里不存任何 npm token。
+#
+# 首次发布有个 npm 的限制：Trusted Publisher 只能配置在「已经存在」的包上，
+# 所以 0.1.0 需要先在本地 `npm publish --access public` 发一次；之后在
+# npmjs.com → dsh-island-go → Settings → Trusted publishing 里填：
+#   Organization/user: a961282799-crypto
+#   Repository:        dsh-island-go
+#   Workflow filename: publish.yml
+#   Allowed actions:   npm publish
+# 配好以后推 v<version> 标签或手动 Run workflow 即可。
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write # OIDC：npm 用这个换一次性的发布 token
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # 注意：这里不要设 registry-url / NODE_AUTH_TOKEN。
+      # 空的 _authToken 会挡住 OIDC 换取发布 token，症状是 ENEEDAUTH 或 404。
+      - name: 检查标签与 package.json 版本一致
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          echo "package.json: $version"
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "${GITHUB_REF_NAME#v}" != "$version" ]; then
+            echo "标签 $GITHUB_REF_NAME 与 package.json 的 $version 不一致，先改版本号再发。" >&2
+            exit 1
+          fi
+
+      - name: 单元测试
+        run: |
+          for file in test/*.test.mjs; do
+            echo "== $file"
+            node "$file"
+          done
+
+      - name: 发布到 npm
+        run: npm publish --access public --provenance

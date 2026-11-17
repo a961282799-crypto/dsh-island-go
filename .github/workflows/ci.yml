@@ -1,0 +1,25 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      # 每个测试文件在本进程里跑：插件只依赖 node:test，没有 npm 依赖要装。
+      - name: 单元测试
+        run: |
+          for file in test/*.test.mjs; do
+            echo "== $file"
+            node "$file"
+          done

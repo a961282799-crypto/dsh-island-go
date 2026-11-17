@@ -1,0 +1,83 @@
+{
+  "name": "dsh-island-go",
+  "version": "0.1.0",
+  "description": "DeepSeek Harness 灵动岛的 DSH Go 原生版本：输入框状态条、用量面板、每轮费用尾注（无需 Electron）",
+  "type": "module",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "README.en.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dsh-plugin",
+    "dsh-bundle",
+    "deepseek-harness",
+    "dsh-go",
+    "usage"
+  ],
+  "engines": {
+    "node": ">=22.19",
+    "dsh": ">=0.2.2-rc.1 <0.3.0-0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "dshGo": {
+    "v": 1,
+    "title": {
+      "zh": "灵动岛",
+      "en": "Island"
+    },
+    "icon": "chart",
+    "contributes": {
+      "composer.strip": [
+        {
+          "id": "status",
+          "icon": "chart",
+          "panel": "island"
+        }
+      ],
+      "panels": [
+        {
+          "id": "island",
+          "title": {
+            "zh": "灵动岛",
+            "en": "Island"
+          },
+          "icon": "chart",
+          "placement": [
+            "session.tab",
+            "features"
+          ]
+        }
+      ],
+      "turn.note": [
+        {
+          "id": "cost"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "test": "node --test test/"
+  },
+  "author": "a961282799-crypto",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/a961282799-crypto/dsh-island-go.git"
+  },
+  "homepage": "https://github.com/a961282799-crypto/dsh-island-go#readme",
+  "bugs": {
+    "url": "https://github.com/a961282799-crypto/dsh-island-go/issues"
+  }
+}
