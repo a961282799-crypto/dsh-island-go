@@ -40,7 +40,7 @@ Remote hosts (SSH / relay) have no dsh-go bridge: there the ledger still accumul
 - Reads the engine's own session events: state, plan progress, context window and token counts, model names.
 - Ledger lives in `$DSH_HOME/dsh-island-go/usage.json` (default `~/.dsh/dsh-island-go/usage.json`): turns, models, times, tokens and estimated cost, kept 35 days, **no conversation text**.
 - No credentials, no network calls, no listening ports.
-- Cost is estimated per call from [DeepSeek's official prices](https://api-docs.deepseek.com/zh-cn/quick_start/pricing) (queried 2026-10-27); the bill is authoritative.
+- Cost is estimated per call from [DeepSeek's official prices](https://api-docs.deepseek.com/zh-cn/quick_start/pricing) (checked 2026-11-22); the bill is authoritative.
 
 ## Compatibility
 

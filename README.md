@@ -2,6 +2,13 @@
 
 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 的「灵动岛」在 **DSH Go**（Android App）里的原生形态。
 
+> **本机修复版 0.1.1**（2026-11-22）。修了三件事：
+> 1. **模型识别不出来**：0.1.0 只从 `model/selection` / `assistant/attempt` 取模型名，但这两类事件在当前 Harness 里不带模型，面板就一直是「未知模型」。改成从 `assistant/message` 的 `message.source.model` 取（每次调用自己的模型），`request/header` 的 `header.config.model` 兜底。
+> 2. **费用一直是 ¥0.00**：模型为空 → 官方没有对应单价 → 估不出钱。模型能认出来以后按官方价正常估算；另外还有没定价的调用时不再写成 `¥0.00`，而是 `—` / `≈¥…`。
+> 3. **历史账本不会自愈**：旧账本 `usage.json` 记的是空模型、0 费用。现在账本带版本号（2），加载时发现旧版本会自动重新扫描会话日志补算；连日志都被删掉的会话，用当前默认模型补一个「约」价（`≈`）。
+>
+> 另外按官方口径把中国法定节假日算进空闲时段（原版只按周一至周五判断），并把面板里「近 7 天」和「今日」两组数字分开标注。
+
 桌面版 [`dsh-island`](https://github.com/a961282799-crypto/dsh-island) 靠 Electron 画一个置顶悬浮窗；App 里不能开跨应用悬浮窗，所以这个包不画窗口，只把同一份引擎侧数据接到 App 的原生插槽上：
 
 | 插槽 | 位置 | 显示什么 |
@@ -42,7 +49,8 @@ dsh plugin --profile web add dsh-island-go
 - 只读引擎自己的会话事件：状态、计划进度、上下文窗口与 token 数、模型名。
 - 账本存在 `$DSH_HOME/dsh-island-go/usage.json`（默认 `~/.dsh/dsh-island-go/usage.json`），只记轮次、模型、时间、tokens 与估算费用，保留 35 天，**不含对话正文**。
 - 不读密钥、不发网络请求、不新增监听端口。
-- 费用按 [DeepSeek 官方价格](https://api-docs.deepseek.com/zh-cn/quick_start/pricing)（2026-10-27 查询）逐次调用估算，仅供参考，以账单为准。
+- 高峰时段＝北京时间周一至周五（不含法定节假日）9:00–12:00、14:00–18:00，其余时段为空闲时段（半价）；节假日表取自国务院办公厅 2026 年放假通知。
+- 费用按 [DeepSeek 官方价格](https://api-docs.deepseek.com/zh-cn/quick_start/pricing)（2026-11-22 核对）逐次调用估算，仅供参考，以账单为准。
 
 ## 兼容性
 
