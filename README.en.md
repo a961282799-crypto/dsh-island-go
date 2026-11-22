@@ -42,6 +42,16 @@ Remote hosts (SSH / relay) have no dsh-go bridge: there the ledger still accumul
 - No credentials, no network calls, no listening ports.
 - Cost is estimated per call from [DeepSeek's official prices](https://api-docs.deepseek.com/zh-cn/quick_start/pricing) (checked 2026-11-22); the bill is authoritative.
 
+## Pricing coverage
+
+| Model | Price source |
+| --- | --- |
+| `deepseek-flash`, `deepseek-v4-pro` (and the old alias `deepseek-v4-flash`) | Built-in official DeepSeek prices, with peak / off-peak periods |
+| Anything else (MIMO, KIMI, MiniMax, GLM, Qwen, other custom providers) | Read at runtime from the model catalog shipped with the engine (`@earendil-works/pi-ai` provider data), converted with `USD / 1M tokens x 7.2` to CNY. Zero-priced subscription plans are skipped rather than treated as free |
+| Not found | Shown as "unpriced": tokens are still counted, the cost is left blank |
+
+Override anything in `$DSH_HOME/dsh-island-go/prices.json` (CNY per 1M tokens, highest priority; flat `input` / `output` / `cacheRead`, or `peak` / `offPeak` for time-of-day pricing). Restart the engine to apply; turns that were previously unpriced are repriced on startup.
+
 ## Compatibility
 
 Written against the DSH Go 1.1.0 native plugin protocol (`dshGo` v1 in `package.json`, `ctx.dshGo`, the view component catalogue) and the bundled engine `r15-dsh0.2.2-rc.1`; `engines.dsh` is `>=0.2.2-rc.1 <0.3.0-0`.

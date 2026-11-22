@@ -1,6 +1,6 @@
 {
   "name": "dsh-island-go",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "DeepSeek Harness 灵动岛的 DSH Go 原生版本：输入框状态条、用量面板、每轮费用尾注（无需 Electron）。本地修复版：识别真实模型名并按官方价估算费用。",
   "type": "module",
   "license": "MIT",

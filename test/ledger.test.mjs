@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { TurnFold, UsageLedger } from '../lib/usage.js';
-import { estimateCost } from '../lib/pricing.js';
+import { estimateCost, useCatalog } from '../lib/pricing.js';
 
 // 北京时间周三 03:00（空闲时段），避免早晚高峰影响断言。
 const T = Date.UTC(2026, 10, 17, 19, 0, 0);
@@ -127,7 +127,7 @@ test('旧版本账本加载后会被标成待补算', async () => {
   try {
     const ledger = new UsageLedger({ file, now: () => T + 5000 }).load();
     assert.equal(ledger.sessions.get('s1').scanned, false);
-    const fixed = ledger.repriceMissing('deepseek-flash');
+    const fixed = ledger.reprice('deepseek-flash');
     assert.equal(fixed, 1);
     const turn = ledger.sessions.get('s1').fold.turns[0];
     assert.equal(turn.model, 'deepseek-flash');
@@ -135,4 +135,25 @@ test('旧版本账本加载后会被标成待补算', async () => {
     assert.ok(turn.cost > 0);
     assert.equal(ledger.stats('7d').totals.unpricedTokens, 0);
   } finally { await rm(dir, { recursive: true, force: true }); }
+});
+
+// —— 回归：后来才有价格的模型会把之前没算的轮次补上 ——
+test('接入模型库之后，之前没定价的轮次会被补算', () => {
+  const ledger = new UsageLedger({ now: () => T + 5000 });
+  for (const event of turnWithSource('mimo-v2.6-flash')) ledger.ingest('s1', event);
+  assert.equal(ledger.sessions.get('s1').fold.turns[0].priced, false);
+
+  useCatalog(new Map([['mimo-v2.6-flash', { input: 0.14, output: 0.28, cacheRead: 0.0028 }]]));
+  try {
+    assert.equal(ledger.reprice(), 1);
+    const turn = ledger.sessions.get('s1').fold.turns[0];
+    assert.equal(turn.priced, true);
+    assert.ok(turn.cost > 0);
+    assert.equal(turn.approx, undefined); // 是按官方价算的，不是补估
+    assert.equal(ledger.stats('7d').totals.unpricedTokens, 0);
+    // 已经有价的轮次不会被重算
+    const before = turn.cost;
+    assert.equal(ledger.reprice(), 0);
+    assert.equal(turn.cost, before);
+  } finally { useCatalog(null); }
 });
