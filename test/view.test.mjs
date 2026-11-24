@@ -117,3 +117,28 @@ test('复制摘要包含状态、上下文与模型', () => {
   assert.match(text, /^状态: 正在思考/);
   assert.match(text, /deepseek-flash/);
 });
+
+// —— 回归：钱算不出来时不能显示成 ¥0.00 ——
+test('没定价的模型写「未定价」，不写成 0 元', () => {
+  const data = panelData(snap({ models: [{ model: '', tokens: 100000, cost: 0, priced: false }] }), 'zh');
+  assert.equal(data.models[0].title, '未知模型');
+  assert.match(data.models[0].trailing, /未定价/);
+});
+
+test('今日有没定价的调用时不写成确定的数', () => {
+  assert.equal(panelData(snap(), 'zh').today.cost, '¥1.23');
+  assert.equal(panelData(snap({ today: { ...snap().today, unpricedTokens: 1000 } }), 'zh').today.cost, '≈¥1.23');
+  assert.equal(panelData(snap({ today: { ...snap().today, cost: 0, unpricedTokens: 1000 } }), 'zh').today.cost, '—');
+});
+
+test('补估的费用加约等号', () => {
+  const notes = turnNotes(snap({ turns: [{ turn: 3, cost: 0.5, state: 'completed', priced: true, approx: true }] }), 'zh');
+  assert.equal(notes['3'].text, '≈¥0.50');
+});
+
+test('英文状态条放不下时先省上下文，不截断金额', () => {
+  const line = stripData(snap({ state: 'completed', ctx: { tokens: 40000, window: 1000000 } }), 'en-US');
+  assert.ok(Array.from(line.text).length <= 24, line.text);
+  assert.doesNotMatch(line.text, /¥0…/);
+  assert.match(line.text, /¥1\.23$/);
+});
